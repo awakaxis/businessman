@@ -1,4 +1,5 @@
 import requests
+
 from util.log_helper import get_logger
 
 AUCTIONAPI = "https://api.hypixel.net/skyblock/auctions"
@@ -13,10 +14,10 @@ def request_api(page_number: int = 0):
     if result.status_code != 200:
         LOGGER.warning("Unexpected status code: " + str(result.status_code))
         return {}
-    
+
     if not json_data["success"]:
         raise ValueError("API request failed.")
-    
+
     return json_data
 
 
@@ -26,7 +27,7 @@ def get_auction_page_json(page_number: int):
     return json_data
 
 
-def get_total_page_count():
+def get_total_page_count() -> int:
     json_data = request_api()
 
     return json_data["totalPages"]
@@ -42,7 +43,7 @@ def filter_page_by_properties(page: dict, properties: dict):
 
             results.append(item)
             break
-    
+
     return results
 
 
@@ -53,7 +54,9 @@ def get_auctions_by_item(item_name: str, bin: bool = False):
 
     for page_number in range(0, total_pages - 1):
         json_data = request_api(page_number)
-        filtered_list = filter_page_by_properties(json_data["auctions"], {"item_name": item_name, "bin": bin})
+        filtered_list = filter_page_by_properties(
+            json_data["auctions"], {"item_name": item_name, "bin": bin}
+        )
 
         result = result + filtered_list
 

@@ -2,11 +2,13 @@ import os
 from logging import Logger
 
 import discord
-from discord import ApplicationContext, Intents
+from discord import ApplicationContext, Intents, SlashCommandGroup
 from discord.ext import commands
 
-from util.log_helper import get_logger
 import util.request_helper as request_helper
+from util import request_helper
+from util.embeds import Debug
+from util.log_helper import get_logger
 
 TOKEN = os.getenv("BOT_TESTING_TOKEN")
 
@@ -38,13 +40,18 @@ class BusinessMan(commands.Bot):
         @self.slash_command()
         async def getauctions(ctx: ApplicationContext, name: str):
             await ctx.defer()
-            
+
             items = request_helper.get_auctions_by_item(name, True)
             final = ""
 
             for item in items:
-                final = final + "Price: " + str(item["starting_bid"]) + item["item_name"] + "\n"
-            
+                final = (
+                    final
+                    + "Price: "
+                    + str(item["starting_bid"])
+                    + item["item_name"]
+                    + "\n"
+                )
 
             await ctx.send_followup(final)
             # channel =  await self.fetch_channel(ctx.channel_id)
@@ -52,9 +59,20 @@ class BusinessMan(commands.Bot):
             # for split in [final[i:i + 2000] for i in range(0, len(final), 2000)]:
             #    await channel.send(split)
 
-                
+        debug: SlashCommandGroup = self.create_group(
+            name="debug", description="debug commands"
+        )
 
-            
+        @debug.command()
+        async def get_page_count(ctx: ApplicationContext):
+            result = request_helper.get_total_page_count()
+            await ctx.respond(result)
+
+        @debug.command()
+        async def get_page(ctx: ApplicationContext, page_number: int):
+            result = request_helper.get_auction_page_json(page_number)
+            embed = Debug.page_debug(result)
+            await ctx.respond(embed=embed)
 
 
 bot = BusinessMan(get_logger("Businessman"))
