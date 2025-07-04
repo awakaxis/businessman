@@ -1,5 +1,5 @@
 import requests
-from log_helper import get_logger
+from util.log_helper import get_logger
 
 AUCTIONAPI = "https://api.hypixel.net/skyblock/auctions"
 
@@ -30,4 +30,3 @@ def get_total_page_count():
     json_data = request_api()
 
     return json_data["totalPages"]
-
