@@ -34,17 +34,29 @@ def get_total_page_count() -> int:
 
 
 def filter_page_by_properties(page: dict, properties: dict):
-    results = []
-
-    for item in page:
-        for property, value in properties.items():
-            if not item[property] or item[property] != value:
-                break
-
-            results.append(item)
-            break
+    results = [
+        item for item in page
+        if all(
+                item.get(property) == value 
+                or (property == "item_name" and str.find(item["item_name"], value) != -1) 
+                for property, value in properties.items()
+               )
+    ]
+            
 
     return results
+
+
+def sort_item_list(item_list: list, is_bin: bool = True):
+    def sort(a):
+        if is_bin:
+            return a["starting_bid"] 
+        else:
+            return a["highest_bid_amount"] 
+
+    item_list.sort(key=sort)
+
+    return item_list
 
 
 def get_auctions_by_item(item_name: str, bin: bool = False):
@@ -52,7 +64,7 @@ def get_auctions_by_item(item_name: str, bin: bool = False):
 
     result = []
 
-    for page_number in range(0, total_pages - 1):
+    for page_number in range(0, total_pages):
         json_data = request_api(page_number)
         filtered_list = filter_page_by_properties(
             json_data["auctions"], {"item_name": item_name, "bin": bin}
@@ -61,3 +73,11 @@ def get_auctions_by_item(item_name: str, bin: bool = False):
         result = result + filtered_list
 
     return result
+
+
+def get_lowest_n(item_list: list, n: int = 10):
+    sort_item_list(item_list)
+
+    top_n = item_list[:n]
+
+    return top_n

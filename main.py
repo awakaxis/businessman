@@ -8,6 +8,7 @@ from discord.ext import commands
 import util.request_helper as request_helper
 from util import request_helper
 from util.embeds import Debug
+from util.embeds import User
 from util.log_helper import get_logger
 
 TOKEN = os.getenv("BOT_TESTING_TOKEN")
@@ -59,6 +60,16 @@ class BusinessMan(commands.Bot):
             # for split in [final[i:i + 2000] for i in range(0, len(final), 2000)]:
             #    await channel.send(split)
 
+        @self.slash_command()
+        async def lowestbin(ctx: ApplicationContext, item_name: str, amount_to_show: int = 10):
+            await ctx.defer()
+
+            item_list = request_helper.get_auctions_by_item(item_name, True)
+            top_n = request_helper.get_lowest_n(item_list, amount_to_show)
+
+            embed = User.basic_bin_price_list(top_n, item_name, amount_to_show)
+            await ctx.send_followup(embed=embed)
+
         debug: SlashCommandGroup = self.create_group(
             name="debug", description="debug commands"
         )
@@ -73,7 +84,6 @@ class BusinessMan(commands.Bot):
             result = request_helper.get_auction_page_json(page_number)
             embed = Debug.page_debug(result)
             await ctx.respond(embed=embed)
-
 
 bot = BusinessMan(get_logger("Businessman"))
 
